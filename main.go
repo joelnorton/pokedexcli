@@ -60,6 +60,11 @@ func main() {
 				description: "Inspect a Pokemon you have captured",
 				callback:    commandInspect,
 			},
+			"pokedex": {
+				name:        "pokedex",
+				description: "View your Pokedex",
+				callback:    commandPokedex,
+			},
 		},
 		next:    "https://pokeapi.co/api/v2/location-area?offset=0&limit=20",
 		prev:    "",
