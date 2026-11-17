@@ -12,47 +12,49 @@ type AreaElements struct {
 	PokemonEncounters []struct {
 		Pokemon struct {
 			Name string `json:"name"`
-			Url  string `json:"url"`
+			URL  string `json:"url"`
 		} `json:"pokemon"`
 	} `json:"pokemon_encounters"`
 }
 
-func getArea(cfg *config, location string) error {
+func commandExplore(cfg *config, location string) error {
 	u, err := url.JoinPath("https://pokeapi.co/api/v2/location-area/", url.PathEscape(location))
 	if err != nil {
 		return err
 	}
 
-	key := location
-	v, exists := cfg.cache.GetCache(key)
+	v, exists := cfg.cache.GetCache(u)
 
-	AreaElements := AreaElements{}
+	area := AreaElements{}
 
 	if exists {
-		err = json.Unmarshal(v, &AreaElements)
+		err = json.Unmarshal(v, &area)
 		if err != nil {
 			return err
 		}
 	} else {
-		res, err := http.Get(u)
+		res, err := httpClient.Get(u)
 		if err != nil {
 			return err
+		}
+		defer res.Body.Close()
+		if res.StatusCode != http.StatusOK {
+			return fmt.Errorf("unexpected status from PokeAPI: %s", res.Status)
 		}
 		body, err := io.ReadAll(res.Body)
-		res.Body.Close()
 		if err != nil {
 			return err
 		}
 
-		cfg.cache.AddCache(key, body)
+		cfg.cache.AddCache(u, body)
 
-		err = json.Unmarshal(body, &AreaElements)
+		err = json.Unmarshal(body, &area)
 		if err != nil {
 			return err
 		}
 	}
 	fmt.Println("Pokemon:")
-	for _, e := range AreaElements.PokemonEncounters {
+	for _, e := range area.PokemonEncounters {
 		fmt.Println(" - " + e.Pokemon.Name)
 	}
 

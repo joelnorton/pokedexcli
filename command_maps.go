@@ -11,13 +11,13 @@ import (
 type Location struct {
 	Results []struct {
 		Name string `json:"name"`
-		Url  string `json:"url"`
+		URL  string `json:"url"`
 	} `json:"results"`
 	Next     string `json:"next"`
 	Previous string `json:"previous"`
 }
 
-func commandNext(cfg *config, _ string) error {
+func commandMap(cfg *config, _ string) error {
 	locations, err := getMap(cfg, cfg.next)
 	if err != nil {
 		return err
@@ -32,7 +32,7 @@ func commandNext(cfg *config, _ string) error {
 	return nil
 }
 
-func commandPrev(cfg *config, _ string) error {
+func commandMapb(cfg *config, _ string) error {
 	if cfg.prev == "" {
 		return fmt.Errorf("No previous map found\n")
 	}
@@ -52,12 +52,12 @@ func commandPrev(cfg *config, _ string) error {
 
 func getMap(cfg *config, u string) (Location, error) {
 	locations := Location{}
-	url, err := url.Parse(u)
+	parsed, err := url.Parse(u)
 	if err != nil {
 		return locations, err
 	}
 
-	key := url.Query().Get("offset")
+	key := parsed.String()
 	v, exists := cfg.cache.GetCache(key)
 	if exists {
 		err = json.Unmarshal(v, &locations)
@@ -65,12 +65,15 @@ func getMap(cfg *config, u string) (Location, error) {
 			return locations, err
 		}
 	} else {
-		res, err := http.Get(u)
+		res, err := httpClient.Get(u)
 		if err != nil {
 			return locations, err
 		}
+		defer res.Body.Close()
+		if res.StatusCode != http.StatusOK {
+			return locations, fmt.Errorf("unexpected status from PokeAPI: %s", res.Status)
+		}
 		body, err := io.ReadAll(res.Body)
-		res.Body.Close()
 		if err != nil {
 			return locations, err
 		}

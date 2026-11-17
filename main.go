@@ -1,10 +1,14 @@
 package main
 
 import (
+	"net/http"
 	"time"
 
 	pokecache "github.com/joelnorton/pokedexcli/cache"
 )
+
+// httpClient is shared by all commands that fetch from PokeAPI.
+var httpClient = &http.Client{Timeout: 10 * time.Second}
 
 type cliCommand struct {
 	name        string
@@ -13,7 +17,6 @@ type cliCommand struct {
 }
 
 type config struct {
-	state       string
 	cliCommands map[string]cliCommand
 	next        string
 	prev        string
@@ -38,22 +41,22 @@ func main() {
 			"map": {
 				name:        "map",
 				description: "Get the next 20 location ares in the Pokemon world",
-				callback:    commandNext,
+				callback:    commandMap,
 			},
 			"mapb": {
 				name:        "mapb",
 				description: "Get the previous 20 location ares in the Pokemon world",
-				callback:    commandPrev,
+				callback:    commandMapb,
 			},
 			"explore": {
 				name:        "explore",
 				description: "Explore an area in the world",
-				callback:    getArea,
+				callback:    commandExplore,
 			},
 			"catch": {
 				name:        "catch",
 				description: "Throw a pokeball at the pokemon",
-				callback:    catchPokemon,
+				callback:    commandCatch,
 			},
 			"inspect": {
 				name:        "inspect",

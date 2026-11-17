@@ -25,8 +25,16 @@ func startRepl(cfg *config) {
 
 	for {
 		fmt.Print("Pokedex >")
-		scanner.Scan()
+		if !scanner.Scan() {
+			if err := scanner.Err(); err != nil {
+				fmt.Printf("error reading input: %v\n", err)
+			}
+			return
+		}
 		o := cleanInput(scanner.Text())
+		if len(o) == 0 {
+			continue
+		}
 		c, ok := cfg.cliCommands[o[0]]
 		if ok {
 			if len(o) == 1 {
